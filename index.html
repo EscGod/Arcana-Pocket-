@@ -1,0 +1,201 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<meta name="theme-color" content="#111126">
+<title>Arcana Pocket</title>
+<style>
+*{box-sizing:border-box}
+body{margin:0;background:#111126;color:#fff;font-family:system-ui,sans-serif}
+header{padding:20px 16px;background:linear-gradient(135deg,#33265d,#15152e);display:flex;justify-content:space-between;align-items:center}
+h1{margin:0;font-size:23px;letter-spacing:2px}
+.gold{color:#ffd166}
+header small{color:#c7c3e9}
+main{padding:16px;padding-bottom:90px;max-width:700px;margin:auto}
+.hero{padding:22px;border-radius:22px;background:linear-gradient(135deg,#49347c,#25234c);margin-bottom:22px}
+.hero h2{font-size:29px;margin:6px 0}
+button{background:#7866ec;color:white;border:0;border-radius:12px;padding:13px 17px;font-size:15px;font-weight:750;cursor:pointer}
+button:active{transform:scale(.98)}
+button.secondary{background:#343452}
+button:disabled{opacity:.45}
+nav{position:fixed;bottom:0;left:0;right:0;display:flex;justify-content:space-around;background:#20203a;padding:8px 2px calc(8px + env(safe-area-inset-bottom));z-index:5}
+nav button{background:transparent;padding:9px 10px;font-size:12px}
+nav button.active{color:#ffd166;background:#383352}
+.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.card{border:2px solid #ffffff35;border-radius:17px;padding:10px;background:linear-gradient(150deg,var(--c),#19182e 85%);min-width:0;box-shadow:0 5px 15px #0003}
+.art{height:105px;border-radius:11px;background:#ffffff15;display:grid;place-items:center;font-size:53px}
+.card h3{margin:9px 0 3px;font-size:16px}
+.card p{margin:4px 0;color:#ddd9f4;font-size:12px}
+.stats{display:flex;justify-content:space-between;font-size:12px;font-weight:bold}
+.panel{background:#23233e;border-radius:18px;padding:17px;margin-bottom:15px}
+.muted{color:#c1bfd9;font-size:13px;line-height:1.5}
+.pack{padding:25px 12px;text-align:center;border-radius:22px;background:linear-gradient(140deg,#6945a8,#22234b);border:1px solid #aa8aff}
+.packicon{font-size:76px;filter:drop-shadow(0 0 15px #ffd166)}
+.row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.row button{flex:1}
+.progress{height:10px;background:#484861;border-radius:8px;overflow:hidden;margin:7px 0 13px}
+.bar{height:100%;background:#65dba4;transition:width .3s}
+.hidden{display:none!important}
+.notice{color:#ffd166;margin:12px 0;font-size:14px}
+footer{text-align:center;color:#8886aa;font-size:11px;padding:20px}
+</style>
+</head>
+<body>
+<header>
+ <div><h1>ARCANA <span class="gold">✦</span></h1><small>Pocket Tactics</small></div>
+ <div class="gold" id="count">3 cards</div>
+</header>
+<main>
+<section id="home">
+ <div class="hero">
+  <div class="gold">YOUR ADVENTURE BEGINS</div>
+  <h2>Collect.<br>Build. Battle.</h2>
+  <p class="muted">Discover elemental creatures, open mysterious packs and become a champion.</p>
+  <button onclick="openPack()">✦ Open a free pack</button>
+ </div>
+ <h2>Recently collected</h2>
+ <div id="recent" class="grid"></div>
+ <div class="panel" style="margin-top:18px">
+  <b>Daily training</b>
+  <p class="muted">Ready to test your strongest creature?</p>
+  <button onclick="startBattle()">Enter the arena</button>
+ </div>
+</section>
+
+<section id="packs" class="hidden">
+ <h2>Booster packs</h2>
+ <p class="muted">Every pack contains five random cards. Rare creatures are harder to find!</p>
+ <div class="pack">
+  <div class="packicon">✦</div>
+  <h2>ELEMENTAL DREAMS</h2>
+  <p>5 cards · Free</p>
+  <button onclick="openPack()">OPEN PACK</button>
+ </div>
+ <p id="packmsg" class="notice"></p>
+ <div id="revealed" class="grid"></div>
+</section>
+
+<section id="cards" class="hidden">
+ <h2>Your collection</h2>
+ <p class="muted">Every card you collect is saved on this device.</p>
+ <div class="row" style="margin-bottom:15px">
+  <button class="secondary" onclick="filter='ALL';renderCollection()">All cards</button>
+  <button class="secondary" onclick="filter='RARE';renderCollection()">Rare cards</button>
+ </div>
+ <div id="collection" class="grid"></div>
+</section>
+
+<section id="battle" class="hidden">
+ <h2>Training arena</h2>
+ <p class="muted">Your strongest creature will lead the fight. Reduce the opponent's HP to zero to win.</p>
+ <div class="panel">
+  <div class="row"><b id="enemyname">Shadow Beast</b><span class="gold" id="enemyhp">100 HP</span></div>
+  <div class="progress"><div class="bar" id="enemybar" style="width:100%"></div></div>
+  <div class="row"><b id="playername">Your creature</b><span class="gold" id="playerhp">100 HP</span></div>
+  <div class="progress"><div class="bar" id="playerbar" style="width:100%"></div></div>
+  <p id="battlelog" class="muted">A challenger approaches!</p>
+  <button id="attack" onclick="attack()">⚡ ATTACK</button>
+  <button class="secondary" onclick="startBattle()">New battle</button>
+ </div>
+</section>
+<footer>Arcana Pocket · Original fan-independent game prototype</footer>
+</main>
+<nav>
+ <button id="navhome" class="active" onclick="show('home')">⌂<br>Home</button>
+ <button id="navpacks" onclick="show('packs')">✦<br>Packs</button>
+ <button id="navcards" onclick="show('cards')">▤<br>Cards</button>
+ <button id="navbattle" onclick="startBattle()">⚔<br>Battle</button>
+</nav>
+<script>
+const pool=[
+ {name:"Ember Fox",type:"FIRE",hp:60,atk:30,cost:1,move:"Spark Pounce",emoji:"🦊",color:"#9e493b"},
+ {name:"Tide Turtle",type:"WATER",hp:80,atk:20,cost:1,move:"Bubble Bash",emoji:"🐢",color:"#315d8d"},
+ {name:"Mossback",type:"NATURE",hp:90,atk:40,cost:2,move:"Root Slam",emoji:"🌿",color:"#34694d"},
+ {name:"Volt Finch",type:"STORM",hp:50,atk:40,cost:1,move:"Static Peck",emoji:"⚡",color:"#6c5e9d"},
+ {name:"Moon Moth",type:"MYSTIC",hp:70,atk:30,cost:2,move:"Dream Dust",emoji:"🦋",color:"#765c87"},
+ {name:"Cinder Drake",type:"FIRE",hp:100,atk:60,cost:3,move:"Comet Breath",emoji:"🐉",color:"#a34b35"},
+ {name:"Glacier Lynx",type:"WATER",hp:90,atk:50,cost:3,move:"Frost Claw",emoji:"🐈",color:"#397a9e"},
+ {name:"Ancient Stag",type:"NATURE",hp:120,atk:70,cost:4,move:"Worldroot",emoji:"🦌",color:"#417c50"},
+ {name:"Storm Roc",type:"STORM",hp:110,atk:70,cost:4,move:"Skybreaker",emoji:"🦅",color:"#6652a3"},
+ {name:"Astral Wyrm",type:"MYSTIC",hp:130,atk:80,cost:5,move:"Nova Spiral",emoji:"🐲",color:"#8b58ac"}
+];
+let collection=[];
+try{collection=JSON.parse(localStorage.getItem("arcanaCards"))||[]}catch(e){}
+if(!collection.length)collection=[0,1,2].map(id=>({...pool[id],id:crypto.randomUUID?.()||String(Math.random())}));
+let filter="ALL",enemy=100,player=100,over=false;
+function persist(){
+ try{localStorage.setItem("arcanaCards",JSON.stringify(collection))}catch(e){}
+ document.getElementById("count").textContent=collection.length+" cards";
+}
+function cardHTML(c){
+ return `<div class="card" style="--c:${c.color}">
+ <div class="art">${c.emoji}</div><h3>${c.name}</h3>
+ <p>${c.type} · ${c.cost>=4?"★ RARE":c.cost>=3?"★ UNCOMMON":"COMMON"}</p>
+ <div class="stats"><span>❤ ${c.hp} HP</span><span>⚔ ${c.atk}</span></div>
+ <p>${c.move}</p></div>`;
+}
+function show(id){
+ document.querySelectorAll("main section").forEach(s=>s.classList.add("hidden"));
+ document.getElementById(id).classList.remove("hidden");
+ document.querySelectorAll("nav button").forEach(b=>b.classList.remove("active"));
+ const nav=document.getElementById("nav"+id);if(nav)nav.classList.add("active");
+ if(id==="cards")renderCollection();
+ if(id==="home")renderRecent();
+}
+function renderRecent(){
+ document.getElementById("recent").innerHTML=collection.slice(-2).reverse().map(cardHTML).join("");
+ persist();
+}
+function renderCollection(){
+ let list=[...collection].reverse();
+ if(filter==="RARE")list=list.filter(c=>c.cost>=4);
+ document.getElementById("collection").innerHTML=list.length?list.map(cardHTML).join(""):"<p>No rare cards yet. Open more packs!</p>";
+ persist();
+}
+function openPack(){
+ const picks=[];
+ for(let i=0;i<5;i++){
+  let c=pool[Math.floor(Math.random()*pool.length)];
+  if(Math.random()<.13)c=pool.filter(x=>x.cost>=3)[Math.floor(Math.random()*pool.filter(x=>x.cost>=3).length)];
+  picks.push({...c,id:crypto.randomUUID?.()||String(Math.random())});
+ }
+ collection.push(...picks);persist();
+ document.getElementById("packmsg").textContent="You pulled five cards! Check out your new discoveries:";
+ document.getElementById("revealed").innerHTML=picks.map(cardHTML).join("");
+ show("packs");
+}
+function startBattle(){
+ enemy=100;player=100;over=false;
+ document.getElementById("enemyname").textContent="Shadow Beast";
+ document.getElementById("battlelog").textContent="Battle started! Your strongest creature is ready.";
+ updateBattle();show("battle");
+}
+function updateBattle(){
+ document.getElementById("enemyhp").textContent=enemy+" HP";
+ document.getElementById("playerhp").textContent=player+" HP";
+ document.getElementById("enemybar").style.width=enemy+"%";
+ document.getElementById("playerbar").style.width=player+"%";
+ document.getElementById("attack").textContent=over?"BATTLE OVER":"⚡ ATTACK";
+ document.getElementById("attack").disabled=over;
+}
+function attack(){
+ if(over)return;
+ const c=collection.reduce((a,b)=>a.atk>b.atk?a:b);
+ const dmg=c.atk+Math.floor(Math.random()*11);
+ enemy=Math.max(0,enemy-dmg);
+ let log=c.name+" used "+c.move+" for "+dmg+" damage!";
+ if(enemy===0){log+=" Victory! You defeated the Shadow Beast.";over=true}
+ else{
+  const hit=12+Math.floor(Math.random()*14);
+  player=Math.max(0,player-hit);log+=" The enemy counterattacked for "+hit+".";
+  if(player===0){log+=" You were defeated. Start a new battle to try again.";over=true}
+ }
+ document.getElementById("battlelog").textContent=log;
+ updateBattle();
+}
+renderRecent();
+</script>
+</body>
+</html>
